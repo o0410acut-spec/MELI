@@ -6,6 +6,7 @@ import com.meli.inventory_service.domain.ports.out.InventoryPort;
 import com.meli.inventory_service.domain.ports.out.OutboxPort;
 import com.meli.inventory_service.domain.ports.out.ReservationPort;
 import com.meli.inventory_service.infrastructure.metrics.InventoryMetrics;
+import com.meli.inventory_service.infrastructure.metrics.InventoryGauges;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -19,6 +20,7 @@ public class ApplicationConfig {
             OutboxPort outboxPort,
             ObjectMapper objectMapper,
             InventoryMetrics inventoryMetrics,
+            InventoryGauges inventoryGauges,
             @Value("${inventory.reservation.ttl.seconds:600}") long ttl) {
         return new InventoryUseCase(
                 inventoryPort,
@@ -26,6 +28,7 @@ public class ApplicationConfig {
                 outboxPort,
                 ttl,
                 objectMapper,
-                inventoryMetrics);
+                inventoryMetrics,
+                inventoryGauges);
     }
 }

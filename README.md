@@ -1,34 +1,56 @@
-# Inventory Service
+# Inventory Service — Optimización de Sistema Distribuido
 
-## Resumen Arquitectónico
+## 📌 Resumen
 
-Servicio de inventario implementado con arquitectura hexagonal (ports & adapters) que gestiona reservas de stock con consistencia optimista. Utiliza el patrón Outbox para publicar eventos de forma confiable a Kafka, garantizando la consistencia eventual entre la base de datos y los mensajes. El servicio maneja concurrencia mediante versioning optimista y retries, y expone una API REST para reservar, confirmar y liberar inventario.
+Este proyecto es un prototipo de un **sistema distribuido de gestión de inventario** desarrollado en **Java 17 / Spring Boot** con arquitectura hexagonal.  
+Demuestra mejoras en:
 
-## Levantar el Servicio
+- **Consistencia**: uso del **patrón Outbox + Kafka** con idempotencia.
+- **Latencia reducida**: flujo de eventos en tiempo real.
+- **Observabilidad**: métricas vía Micrometer + Prometheus + Grafana.
+- **Seguridad básica**: endpoints actuator limitados al entorno local.
 
-### 1. Iniciar Kafka y Monitoreo
+## ⚙️ Stack técnico
+
+- **Java 17 / Spring Boot 3**
+- **H2 Database** (memoria) + JPA
+- **Kafka + Zookeeper** (mensajería)
+- **Prometheus + Grafana + Alertmanager** (monitoring)
+- **JUnit 5 + Mockito** (tests)
+- **Docker Compose** para orquestación
+
+## 🚀 Cómo ejecutar localmente
+
+### 1. Construcción del backend
 
 ```bash
-# Iniciar servicios core (Kafka)
-docker-compose up -d
+# Compilar el proyecto
+mvn clean package -DskipTests
 
-# Iniciar stack de monitoreo (Prometheus + Grafana)
-docker-compose -f docs/docker-compose-monitoring.yml up -d
+# Verificar la construcción
+java -jar target/inventory-service-0.0.1-SNAPSHOT.jar --version
+```
+
+### 2. Iniciar Infraestructura
+
+```bash
+# Iniciar todos los servicios (Kafka + Monitoreo)
+docker-compose -f docker-compose.yml -f docs/docker-compose-monitoring.yml up -d
 
 # Verificar que todos los servicios están corriendo
 docker-compose ps
-docker-compose -f docs/docker-compose-monitoring.yml ps
 ```
 
-Servicios de monitoreo disponibles:
+Servicios disponibles:
 
+- Kafka: localhost:9092
 - Prometheus: http://localhost:9090
 - Grafana: http://localhost:3000 (admin/admin)
   - Dashboard preconfigurado para métricas de inventario
   - Alertas configuradas para stock bajo y errores
 - AlertManager: http://localhost:9093
 
-### 2. Iniciar la Aplicación
+### 3. Iniciar la Aplicación
 
 ```bash
 ./mvnw spring-boot:run
@@ -168,23 +190,17 @@ curl --location 'http://localhost:8080/inventory'
 ### Limitaciones Actuales
 
 - Sin persistencia durable (H2 in-memory)
-- Manejo básico de errores
-- Sin métricas detalladas
-- Testing limitado
 - Implementación simplificada de productos (sin integración con Product Service)
 
 ### Próximos Pasos
 
 1. Migrar a PostgreSQL
 2. Añadir circuit breakers
-3. Implementar métricas Prometheus
-4. Ampliar test coverage
-5. Añadir rate limiting
-6. Documentación OpenAPI
-7. Logging estructurado
-8. Healthchecks más robustos
-9. Integrar con Product Service centralizado
-10. Implementar cache de datos de productos
+3. Añadir rate limiting
+4. Logging estructurado
+5. Healthchecks más robustos
+6. Integrar con Product Service centralizado
+7. Implementar cache de datos de productos
 
 ## Documentación Técnica
 
@@ -202,7 +218,7 @@ npm install -g @mermaid-js/mermaid-cli
 
 ```bash
 # Desde el directorio docs/
-mmdc -i architecture-diagram.mmd -o architecture-diagram.png
+mmdc -i architecture-diagram.mmd -o architecture-diagram.png --scale 4
 ```
 
 El diagrama de arquitectura muestra:
@@ -224,3 +240,125 @@ Los otros diagramas incluyen:
 ## Prompts IA
 
 Los prompts utilizados para el desarrollo están documentados en [prompts-used.txt](./prompts-used.txt)
+
+## 🧪 Pruebas
+
+### Ejecutar Tests
+
+```bash
+# Ejecutar todas las pruebas
+./mvnw test
+
+# Ejecutar pruebas unitarias específicas
+./mvnw test -Dtest=InventoryUseCaseTest
+
+# Ejecutar pruebas de integración
+./mvnw test -Dtest=*IntegrationTest
+
+# Ejecutar pruebas de carga
+./mvnw test -Dtest=*LoadTest
+
+# Generar reporte de cobertura
+./mvnw test jacoco:report
+```
+
+### Ver Resultados
+
+- Reporte JUnit: `target/surefire-reports/`
+- Cobertura de código: `target/site/jacoco/index.html`
+
+### Tipos de Pruebas
+
+1. **Unitarias** (`*Test.java`)
+
+   - Casos de uso aislados
+   - Mocks de dependencias
+   - Validación de lógica de negocio
+
+2. **Integración** (`*IntegrationTest.java`)
+
+   - Flujos completos
+   - Base de datos en memoria
+   - Validación de transacciones
+
+3. **Carga** (`*LoadTest.java`)
+
+   - Concurrencia
+   - Optimistic locking
+   - Rendimiento bajo estrés
+
+4. **API** (`*ApiTest.java`)
+   - Endpoints REST
+   - Validación de requests/responses
+   - Manejo de errores
+
+## 📄 Ejemplos de Requests (REST Client)
+
+Puedes usar estos ejemplos con el plugin REST Client de VS Code o importarlos en Postman:
+
+```http
+### Crear un producto
+POST http://localhost:8080/api/v1/products
+Content-Type: application/json
+
+{
+  "name": "Laptop Dell",
+  "sku": "sku-001",
+  "price": 1200.0,
+  "stock": 10
+}
+
+###
+
+### Listar productos
+GET http://localhost:8080/api/v1/products
+Accept: application/json
+
+###
+
+### Crear inventario (opcional, si API lo expone)
+POST http://localhost:8080/api/v1/inventory
+Content-Type: application/json
+
+{
+  "storeId": "store-1",
+  "productId": "sku-001",
+  "stock": 5
+}
+
+###
+
+### Reservar producto
+POST http://localhost:8080/api/v1/inventory/reserve
+Content-Type: application/json
+
+{
+  "storeId": "store-1",
+  "productId": "sku-001",
+  "quantity": 2
+}
+
+###
+
+### Verificar health
+GET http://localhost:8080/actuator/health
+
+###
+
+### Ver métricas Prometheus
+GET http://localhost:8080/actuator/prometheus
+```
+
+También se puede encontrar estos ejemplos en el archivo [docs/sample-requests.http](docs/sample-requests.http).
+
+## 📬 Colección Postman
+
+Se incluye una colección de Postman con todos los endpoints y ejemplos:
+[MELI.postman_collection.json](MELI.postman_collection.json)
+
+Para importar:
+
+1. Abrir Postman
+2. Clic en "Import"
+3. Seleccionar el archivo MELI.postman_collection.json
+4. Los endpoints estarán disponibles en una nueva colección

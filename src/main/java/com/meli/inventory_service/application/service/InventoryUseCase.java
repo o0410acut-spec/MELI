@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.meli.inventory_service.domain.ports.out.*;
 import com.meli.inventory_service.domain.ports.in.InventoryUseCasePort;
+import com.meli.inventory_service.infrastructure.metrics.InventoryGauges;
 import com.meli.inventory_service.infrastructure.metrics.InventoryMetrics;
 import com.meli.inventory_service.infrastructure.rest.dto.ReserveRequest;
 import com.meli.inventory_service.infrastructure.rest.dto.ReserveResponse;
@@ -21,6 +22,7 @@ public class InventoryUseCase implements InventoryUseCasePort {
     private final long reservationTtlSeconds;
     private final ObjectMapper objectMapper;
     private final InventoryMetrics inventoryMetrics;
+    private final InventoryGauges inventoryGauges;
 
     public InventoryUseCase(
             InventoryPort inventoryPort,
@@ -28,13 +30,31 @@ public class InventoryUseCase implements InventoryUseCasePort {
             OutboxPort outboxPort,
             long reservationTtlSeconds,
             ObjectMapper objectMapper,
-            InventoryMetrics inventoryMetrics) { // Added ObjectMapper parameter
+            InventoryMetrics inventoryMetrics,
+            InventoryGauges inventoryGauges) {
         this.inventoryPort = inventoryPort;
         this.reservationPort = reservationPort;
         this.outboxPort = outboxPort;
         this.reservationTtlSeconds = reservationTtlSeconds;
         this.objectMapper = objectMapper; // Inject ObjectMapper
         this.inventoryMetrics = inventoryMetrics;
+        this.inventoryGauges = inventoryGauges;
+        // Initialize gauge with current total
+        updateAvailableGauge();
+    }
+
+    private void updateAvailableGauge() {
+        int totalAvailable = inventoryPort.findAll().stream()
+                .mapToInt(StoreInventory::getAvailable)
+                .sum();
+        inventoryGauges.setAvailable(totalAvailable);
+    }
+
+    private int calculateTotalAvailableAcrossStoresOrThisStore() {
+        return inventoryPort.findAll()
+                .stream()
+                .mapToInt(StoreInventory::getAvailable)
+                .sum();
     }
 
     @Override
@@ -73,6 +93,7 @@ public class InventoryUseCase implements InventoryUseCasePort {
         inv.setReservedQuantity(inv.getReservedQuantity() + req.getQuantity());
         inv.setUpdatedAt(Instant.now());
         inventoryPort.save(inv);
+        updateAvailableGauge();
 
         Reservation r = new Reservation();
         r.setStoreId(req.getStoreId());
@@ -127,6 +148,7 @@ public class InventoryUseCase implements InventoryUseCasePort {
         inv.setReservedQuantity(inv.getReservedQuantity() - r.getQuantity());
         inv.setUpdatedAt(Instant.now());
         inventoryPort.save(inv);
+        inventoryGauges.setAvailable(calculateTotalAvailableAcrossStoresOrThisStore());
 
         r.setStatus(Reservation.Status.COMMITTED);
         reservationPort.save(r);
@@ -164,6 +186,7 @@ public class InventoryUseCase implements InventoryUseCasePort {
         inv.setReservedQuantity(inv.getReservedQuantity() - r.getQuantity());
         inv.setUpdatedAt(Instant.now());
         inventoryPort.save(inv);
+        inventoryGauges.setAvailable(calculateTotalAvailableAcrossStoresOrThisStore());
 
         r.setStatus(Reservation.Status.RELEASED);
         r.setExpiresAt(Instant.now());

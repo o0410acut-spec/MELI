@@ -1,0 +1,260 @@
+{
+	"info": {
+		"_postman_id": "4a493d89-1aec-43ae-8e30-5b72172efaa7",
+		"name": "MELI",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "46205524"
+	},
+	"item": [
+		{
+			"name": "Crud Product",
+			"item": []
+		},
+		{
+			"name": "Get Products",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/api/v1/products",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"v1",
+						"products"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Products",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"sku\": \"LAP-DEL-001\",\n    \"name\": \"Dell XPS 13\",\n    \"price\": 1999.99,\n    \"stock\": 0,\n    \"description\": \"Laptop Dell XPS 13 para desarrollo\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/v1/products",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"v1",
+						"products"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Products by Id",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/api/v1/products/d0759c2f-f9a6-4fa4-8db9-f147d87a2cce",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"v1",
+						"products",
+						"d0759c2f-f9a6-4fa4-8db9-f147d87a2cce"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Products",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"Laptop Lenovo ThinkPad\",\n    \"price\": 2700.0,\n    \"stock\": 8\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/v1/products/090ef4ae-3075-4ac3-a731-205092a9ba90",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"v1",
+						"products",
+						"090ef4ae-3075-4ac3-a731-205092a9ba90"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Reserve Inventory",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"storeId\": \"store-002\",\n    \"productId\": \"prod-001\",\n    \"quantity\": 2,\n    \"transactionId\": \"tx-demo-001\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{Local}}inventory/reserve",
+					"host": [
+						"{{Local}}inventory"
+					],
+					"path": [
+						"reserve"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Reserve Confirm",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{Local}}inventory/commit?reservationId=9408c885-87f1-4c9a-9b3f-23b92e5926b3",
+					"host": [
+						"{{Local}}inventory"
+					],
+					"path": [
+						"commit"
+					],
+					"query": [
+						{
+							"key": "reservationId",
+							"value": "9408c885-87f1-4c9a-9b3f-23b92e5926b3"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Reserve Cancel",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{Local}}inventory/release?reservationId=9408c885-87f1-4c9a-9b3f-23b92e5926b3&reason=client_cancel",
+					"host": [
+						"{{Local}}inventory"
+					],
+					"path": [
+						"release"
+					],
+					"query": [
+						{
+							"key": "reservationId",
+							"value": "9408c885-87f1-4c9a-9b3f-23b92e5926b3"
+						},
+						{
+							"key": "reason",
+							"value": "client_cancel"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Inventory",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{Local}}inventory",
+					"host": [
+						"{{Local}}inventory"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Products",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/api/v1/products/090ef4ae-3075-4ac3-a731-205092a9ba90",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"v1",
+						"products",
+						"090ef4ae-3075-4ac3-a731-205092a9ba90"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

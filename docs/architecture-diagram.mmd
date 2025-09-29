@@ -1,11 +1,27 @@
 ﻿flowchart LR
   UI[Cliente / Postman] -->|HTTP| Controller(InventoryController)
   Controller -->|llama| UseCase[InventoryUseCase]
-  UseCase -->|persistencia| StoreDB[(H2 / Store DB)]
-  UseCase -->|outbox save| OutboxDB[(Outbox table)]
+
+  subgraph TX["Transacción (DB + Outbox)"]
+    direction TB
+    UseCase -->|persistencia| StoreDB[(H2 / Store DB)]
+    UseCase -->|outbox save| OutboxDB[(Outbox table)]
+  end
+
   OutboxDB -->|publisher lee| OutboxPublisher(KafkaOutboxPublisher)
   OutboxPublisher -->|publica eventos| Kafka[(Kafka Topic inventory.*)]
-  Kafka -->|consume| CentralConsumer[Central Consumer]
+  Kafka -->|consume| CentralConsumer[Central Consumer idempotente]
   CentralConsumer -->|actualiza| CentralRead[(Central Read Model DB)]
-  ReservationExpirationJob -->|escanea| ReservationTable[(Reservation)]
+
+  ReservationExpirationJob[ReservationExpirationJob] -->|escanea expirados| ReservationTable[(Reservation)]
   ReservationExpirationJob -->|llama release| UseCase
+
+  %% Product service (read-only) como dependencia externa
+  ProductSvc[Product Service - read-only]
+  ProductSvc -.->|consulta productId / metadata| UseCase
+  ProductSvc -.->|eventos product.updated| Kafka
+
+  %% Leyenda / notas
+  classDef note fill:#fff7c0,stroke:#e6b800;
+  Note((StoreDB + OutboxDB en la misma transacción local para garantizar entrega del evento)):::note
+  UseCase --> Note

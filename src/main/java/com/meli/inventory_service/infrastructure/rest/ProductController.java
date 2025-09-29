@@ -2,6 +2,7 @@ package com.meli.inventory_service.infrastructure.rest;
 
 import com.meli.inventory_service.application.service.ProductService;
 import com.meli.inventory_service.domain.model.Product;
+import com.meli.inventory_service.infrastructure.metrics.InventoryMetrics;
 import com.meli.inventory_service.infrastructure.rest.dto.ProductRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -14,9 +15,11 @@ import java.util.List;
 @RequestMapping("/api/v1/products")
 public class ProductController {
     private final ProductService svc;
+    private final InventoryMetrics metrics;
 
-    public ProductController(ProductService svc) {
+    public ProductController(ProductService svc, InventoryMetrics metrics) {
         this.svc = svc;
+        this.metrics = metrics;
     }
 
     @GetMapping
@@ -40,6 +43,7 @@ public class ProductController {
 
         try {
             Product created = svc.create(product);
+            metrics.incrementProductsCreated();
             return ResponseEntity.created(URI.create("/api/v1/products/" + created.getId()))
                     .body(created);
         } catch (Exception e) {
