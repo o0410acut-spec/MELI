@@ -1,0 +1,29 @@
+graph TD
+  subgraph app [com.meli.inventory_service]
+    subgraph application
+      UC[InventoryUseCase]
+      Jobs[ReservationExpirationJob]
+    end
+    subgraph domain
+      Model[domain.model: StoreInventory, Reservation, OutboxMessage, ProcessedMessage]
+      PortsIn[ports.in: InventoryUseCasePort]
+      PortsOut[ports.out: InventoryPort, ReservationPort, OutboxPort, ProcessedMessagePort]
+    end
+    subgraph infra [infrastructure]
+      Controllers[rest: InventoryController]
+      DTOs[dto: ReserveRequest/ReserveResponse,...]
+      subgraph persistence
+        Adapters[JpaInventoryAdapter, JpaReservationAdapter, JpaOutboxAdapter]
+        SpringRepos[StoreInventoryRepository, ReservationRepository, OutboxRepository, ProcessedMessageRepository]
+      end
+      Messaging[KafkaOutboxPublisher]
+    end
+  end
+
+  Controllers -->|usa| PortsIn
+  PortsIn --> UC
+  UC --> PortsOut
+  PortsOut --> Adapters
+  Adapters --> SpringRepos
+  Messaging -->|usa| PortsOut
+  Jobs -->|usa| UC

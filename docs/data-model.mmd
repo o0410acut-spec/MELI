@@ -1,0 +1,31 @@
+erDiagram
+  STORE {
+    string id PK
+    string name
+    string location
+  }
+
+  INVENTORY {
+    string id PK
+    string storeId FK
+    string productId FK
+    int quantity
+    datetime updatedAt
+  }
+
+  RESERVATION {
+    string id PK
+    string inventoryId FK
+    int reservedQty
+    datetime expiresAt
+  }
+
+  PRODUCT {
+    string id PK
+    string sku
+    string name
+  }
+
+  STORE ||--o{ INVENTORY : "tiene"
+  INVENTORY ||--o{ RESERVATION : "reserva"
+  PRODUCT ||--o{ INVENTORY : "referencia"

@@ -1,0 +1,22 @@
+sequenceDiagram
+  participant Client
+  participant Controller
+  participant UseCase
+  participant InventoryRepo as InventoryPort(JPA)
+  participant ReservationRepo as ReservationPort(JPA)
+  participant OutboxDB
+  participant OutboxPublisher
+  participant Kafka
+
+  Client->>Controller: POST /inventory/reserve(req)
+  Controller->>UseCase: reserve(req)
+  UseCase->>InventoryRepo: findByStoreAndProduct()
+  InventoryRepo-->>UseCase: StoreInventory
+  UseCase->>InventoryRepo: save(updated reservedQuantity)  --TX--
+  UseCase->>ReservationRepo: save(Reservation)  --same TX--
+  UseCase->>OutboxDB: save(OutboxMessage)  --same TX--
+  UseCase-->>Controller: 200 {reservationId, status}
+  OutboxPublisher->>OutboxDB: fetchPending()
+  OutboxPublisher->>Kafka: send(topic, payload)
+  Kafka->>CentralConsumer: event
+  CentralConsumer->>ProcessedMessage: save(processedId)

@@ -1,0 +1,9 @@
+flowchart LR
+  StoreService[(Store DB + Outbox)]
+  Kafka[Kafka Topic inventory.*]
+  CentralConsumer[Central Consumer]
+  Reconciliator[Reconciliator]
+
+  StoreService -->|publica eventos| Kafka
+  Kafka -->|consume| CentralConsumer
+  CentralConsumer -->|procesa y envía| Reconciliator

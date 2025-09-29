@@ -1,0 +1,11 @@
+﻿flowchart LR
+  UI[Cliente / Postman] -->|HTTP| Controller(InventoryController)
+  Controller -->|llama| UseCase[InventoryUseCase]
+  UseCase -->|persistencia| StoreDB[(H2 / Store DB)]
+  UseCase -->|outbox save| OutboxDB[(Outbox table)]
+  OutboxDB -->|publisher lee| OutboxPublisher(KafkaOutboxPublisher)
+  OutboxPublisher -->|publica eventos| Kafka[(Kafka Topic inventory.*)]
+  Kafka -->|consume| CentralConsumer[Central Consumer]
+  CentralConsumer -->|actualiza| CentralRead[(Central Read Model DB)]
+  ReservationExpirationJob -->|escanea| ReservationTable[(Reservation)]
+  ReservationExpirationJob -->|llama release| UseCase
