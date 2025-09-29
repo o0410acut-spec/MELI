@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.meli.inventory_service.domain.ports.out.*;
 import com.meli.inventory_service.domain.ports.in.InventoryUseCasePort;
+import com.meli.inventory_service.infrastructure.metrics.InventoryMetrics;
 import com.meli.inventory_service.infrastructure.rest.dto.ReserveRequest;
 import com.meli.inventory_service.infrastructure.rest.dto.ReserveResponse;
 import com.meli.inventory_service.domain.model.*;
@@ -18,19 +19,22 @@ public class InventoryUseCase implements InventoryUseCasePort {
     private final ReservationPort reservationPort;
     private final OutboxPort outboxPort;
     private final long reservationTtlSeconds;
-    private final ObjectMapper objectMapper; // Changed to final
+    private final ObjectMapper objectMapper;
+    private final InventoryMetrics inventoryMetrics;
 
     public InventoryUseCase(
             InventoryPort inventoryPort,
             ReservationPort reservationPort,
             OutboxPort outboxPort,
             long reservationTtlSeconds,
-            ObjectMapper objectMapper) { // Added ObjectMapper parameter
+            ObjectMapper objectMapper,
+            InventoryMetrics inventoryMetrics) { // Added ObjectMapper parameter
         this.inventoryPort = inventoryPort;
         this.reservationPort = reservationPort;
         this.outboxPort = outboxPort;
         this.reservationTtlSeconds = reservationTtlSeconds;
         this.objectMapper = objectMapper; // Inject ObjectMapper
+        this.inventoryMetrics = inventoryMetrics;
     }
 
     @Override
@@ -79,6 +83,9 @@ public class InventoryUseCase implements InventoryUseCasePort {
         r.setCreatedAt(Instant.now());
         r.setExpiresAt(Instant.now().plusSeconds(reservationTtlSeconds));
         reservationPort.save(r);
+
+        // Increment metrics after successful save
+        inventoryMetrics.incrementReservations();
 
         log.info("Created reservation id={}, transactionId={}, storeId={}, productId={}, quantity={}",
                 r.getReservationId(), r.getTransactionId(), r.getStoreId(), r.getProductId(), r.getQuantity());

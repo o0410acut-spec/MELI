@@ -6,15 +6,27 @@ Servicio de inventario implementado con arquitectura hexagonal (ports & adapters
 
 ## Levantar el Servicio
 
-### 1. Iniciar Kafka
+### 1. Iniciar Kafka y Monitoreo
 
 ```bash
-# Iniciar servicios
+# Iniciar servicios core (Kafka)
 docker-compose up -d
 
-# Verificar que están corriendo
+# Iniciar stack de monitoreo (Prometheus + Grafana)
+docker-compose -f docs/docker-compose-monitoring.yml up -d
+
+# Verificar que todos los servicios están corriendo
 docker-compose ps
+docker-compose -f docs/docker-compose-monitoring.yml ps
 ```
+
+Servicios de monitoreo disponibles:
+
+- Prometheus: http://localhost:9090
+- Grafana: http://localhost:3000 (admin/admin)
+  - Dashboard preconfigurado para métricas de inventario
+  - Alertas configuradas para stock bajo y errores
+- AlertManager: http://localhost:9093
 
 ### 2. Iniciar la Aplicación
 
@@ -123,6 +135,10 @@ curl --location 'http://localhost:8080/inventory'
 2024-01-24 12:34:58 WARN  Insufficient stock for reservation
 ```
 
+## Nota Importante sobre Implementación
+
+> **Nota**: La entidad Product aquí es una implementación de ejemplo para la demo/QA. En un sistema real, el Product Service centralizado provee esta información y este servicio sólo almacena productId.
+
 ## Trade-offs y Decisiones
 
 1. **Consistencia Eventual vs Fuerte**:
@@ -138,8 +154,14 @@ curl --location 'http://localhost:8080/inventory'
    - Costo: retries ocasionales
 
 3. **In-Memory Database**:
+
    - H2 para prototipado rápido
    - Trade-off: simplicidad vs durabilidad
+
+4. **Implementación de Productos**:
+   - Se incluye entidad Product completa solo para demostración
+   - En producción: solo referencias a productId
+   - Datos de productos se obtendrían vía Product Service
 
 ## Limitaciones y Próximos Pasos
 
@@ -149,6 +171,7 @@ curl --location 'http://localhost:8080/inventory'
 - Manejo básico de errores
 - Sin métricas detalladas
 - Testing limitado
+- Implementación simplificada de productos (sin integración con Product Service)
 
 ### Próximos Pasos
 
@@ -160,6 +183,8 @@ curl --location 'http://localhost:8080/inventory'
 6. Documentación OpenAPI
 7. Logging estructurado
 8. Healthchecks más robustos
+9. Integrar con Product Service centralizado
+10. Implementar cache de datos de productos
 
 ## Documentación Técnica
 

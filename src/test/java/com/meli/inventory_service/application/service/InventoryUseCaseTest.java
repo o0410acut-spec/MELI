@@ -35,7 +35,7 @@ class InventoryUseCaseTest {
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
 
-        useCase = new InventoryUseCase(inventoryPort, reservationPort, outboxPort, 600, objectMapper);
+        useCase = new InventoryUseCase(inventoryPort, reservationPort, outboxPort, 600, objectMapper, null);
     }
 
     @Test

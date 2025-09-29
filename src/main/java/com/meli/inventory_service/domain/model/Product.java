@@ -25,6 +25,12 @@ public class Product {
     @Column(name = "updated_at")
     private Instant updatedAt = Instant.now();
 
+    @Column(nullable = false)
+    private double price;
+
+    @Column(nullable = false)
+    private int stock;
+
     // getters / setters
     public String getId() {
         return id;
@@ -72,5 +78,21 @@ public class Product {
 
     public void setUpdatedAt(Instant updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
+    }
+
+    public int getStock() {
+        return stock;
+    }
+
+    public void setStock(int stock) {
+        this.stock = stock;
     }
 }

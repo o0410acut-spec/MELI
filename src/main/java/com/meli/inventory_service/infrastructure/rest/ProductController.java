@@ -3,6 +3,7 @@ package com.meli.inventory_service.infrastructure.rest;
 import com.meli.inventory_service.application.service.ProductService;
 import com.meli.inventory_service.domain.model.Product;
 import com.meli.inventory_service.infrastructure.rest.dto.ProductRequest;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,7 +11,7 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("/products")
+@RequestMapping("/api/v1/products")
 public class ProductController {
     private final ProductService svc;
 
@@ -29,14 +30,21 @@ public class ProductController {
     }
 
     @PostMapping
-    public ResponseEntity<Product> create(@RequestBody ProductRequest req) {
-        Product p = new Product();
-        p.setId(req.getId());
-        p.setSku(req.getSku());
-        p.setName(req.getName());
-        p.setDescription(req.getDescription());
-        Product created = svc.create(p);
-        return ResponseEntity.created(URI.create("/products/" + created.getId())).body(created);
+    public ResponseEntity<Product> create(@Valid @RequestBody ProductRequest req) {
+        Product product = new Product();
+        product.setName(req.getName());
+        product.setPrice(req.getPrice());
+        product.setStock(req.getStock());
+        product.setSku(req.getSku()); // Añadir SKU
+        product.setDescription(req.getDescription());
+
+        try {
+            Product created = svc.create(product);
+            return ResponseEntity.created(URI.create("/api/v1/products/" + created.getId()))
+                    .body(created);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @PutMapping("/{id}")

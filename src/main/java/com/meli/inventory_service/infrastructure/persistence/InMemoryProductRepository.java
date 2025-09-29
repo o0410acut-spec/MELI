@@ -12,7 +12,7 @@
 // private final Map<String, Product> products = new HashMap<>();
 
 // @Override
-// public Product findById(String id) {
+// public Optional findById(String id) {
 // return products.get(id);
 // }
 
