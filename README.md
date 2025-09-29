@@ -362,3 +362,15 @@ Para importar:
 2. Clic en "Import"
 3. Seleccionar el archivo MELI.postman_collection.json
 4. Los endpoints estarán disponibles en una nueva colección
+
+## 📦 Repositorio
+
+El código está disponible públicamente en GitHub:
+https://github.com/o0410acut-spec/MELI
+
+### Para clonar el repositorio:
+
+```bash
+git clone https://github.com/o0410acut-spec/MELI.git
+cd MELI
+```
